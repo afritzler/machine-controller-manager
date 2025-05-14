@@ -365,7 +365,7 @@ func (c *controller) updateNodeConditionBasedOnLabel(ctx context.Context, machin
 	return machineutils.LongRetry, nil
 }
 
-func (c *controller) inPlaceUpdate(ctx context.Context, machine *v1alpha1.Machine) (machineutils.RetryPeriod, error) {
+func (c *controller) inPlaceUpdate(ctx context.Context, d driver.Driver, machine *v1alpha1.Machine, class *v1alpha1.MachineClass, secretData map[string][]byte) (machineutils.RetryPeriod, error) {
 	cond, err := nodeops.GetNodeCondition(ctx, c.targetCoreClient, getNodeName(machine), v1alpha1.NodeInPlaceUpdate)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -406,6 +406,26 @@ func (c *controller) inPlaceUpdate(ctx context.Context, machine *v1alpha1.Machin
 		if err := nodeops.AddOrUpdateConditionsOnNode(ctx, c.targetCoreClient, getNodeName(machine), *cond); err != nil {
 			return machineutils.ShortRetry, err
 		}
+
+		// Attempt to update the machine's infrastructure resource
+		_, err = d.UpdateMachine(ctx, &driver.UpdateMachineRequest{
+			Machine:      machine,
+			MachineClass: class,
+			Secret:       &v1.Secret{Data: secretData},
+		})
+		if err != nil {
+			machineErr, _ := status.FromError(err)
+			switch machineErr.Code() {
+			case codes.Unimplemented:
+				klog.V(2).Infof("Driver does not support the resource update as part of the in-place update")
+			case codes.OK:
+				klog.V(2).Infof("Driver successfully updated the resource for node %s as part of the in-place update", getNodeName(machine))
+			default:
+				klog.Errorf("Failed to update machine for node %s: %v (code: %v)", getNodeName(machine), machineErr.Message(), machineErr.Code())
+				return machineutils.ShortRetry, fmt.Errorf("failed to update machine for node %s: %w", getNodeName(machine), err)
+			}
+		}
+
 		// give machine time for update to get applied
 		return machineutils.MediumRetry, fmt.Errorf("node %s is ready for in-place update", getNodeName(machine))
 	}

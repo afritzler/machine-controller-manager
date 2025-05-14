@@ -65,6 +65,11 @@ func (d *FakeDriver) CreateMachine(_ context.Context, _ *CreateMachineRequest) (
 	return nil, d.Err
 }
 
+// UpdateMachine makes a call to the driver to update the machine.
+func (d *FakeDriver) UpdateMachine(_ context.Context, _ *UpdateMachineRequest) (*UpdateMachineResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "Fake Provider does not yet implement UpdateMachine")
+}
+
 // InitializeMachine makes a call to the driver to initialize the VM instance of machine.
 func (d *FakeDriver) InitializeMachine(_ context.Context, _ *InitializeMachineRequest) (*InitializeMachineResponse, error) {
 	sErr, ok := status.FromError(d.Err)

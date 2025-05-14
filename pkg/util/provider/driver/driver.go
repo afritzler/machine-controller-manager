@@ -25,6 +25,8 @@ type Driver interface {
 	//  - codes.Uninitialized initialization of VM instance failed due to errors
 	//  - codes.NotFound if VM instance was not found.
 	InitializeMachine(context.Context, *InitializeMachineRequest) (*InitializeMachineResponse, error)
+	// UpdateMachine call is responsible for VM update on the provider
+	UpdateMachine(context.Context, *UpdateMachineRequest) (*UpdateMachineResponse, error)
 	// DeleteMachine call is responsible for VM deletion/termination on the provider
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
 	// GetMachineStatus call get's the status of the VM backing the machine object on the provider
@@ -47,6 +49,13 @@ type CreateMachineRequest struct {
 	Secret *corev1.Secret
 }
 
+// UpdateMachineRequest is the update request for VM update
+type UpdateMachineRequest struct {
+	Machine      *v1alpha1.Machine
+	MachineClass *v1alpha1.MachineClass
+	Secret       *corev1.Secret
+}
+
 // CreateMachineResponse is the create response for VM creation
 type CreateMachineResponse struct {
 	// ProviderID is the unique identification of the VM at the cloud provider.
@@ -63,6 +72,10 @@ type CreateMachineResponse struct {
 	// Addresses to reach the VM. Returning this field is optional, and only used if the MCM provider runs without a
 	// target cluster.
 	Addresses []corev1.NodeAddress
+}
+
+// UpdateMachineResponse is the update response for VM update
+type UpdateMachineResponse struct {
 }
 
 // InitializeMachineRequest encapsulates params for the VM Initialization operation (Driver.InitializeMachine).
