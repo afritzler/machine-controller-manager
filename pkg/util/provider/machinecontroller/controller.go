@@ -8,6 +8,7 @@ package controller
 import (
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -376,7 +377,12 @@ func (dc *controller) getNewMachineClassForMachine(machine *machinev1alpha1.Mach
 
 	var newMachineClass *machinev1alpha1.MachineClass
 	for _, class := range machineClasses {
-		if newMachineClass == nil || newMachineClass.CreationTimestamp.After(class.CreationTimestamp.Time) {
+		lastDash := strings.LastIndex(machine.Spec.Class.Name, "-")
+		name := machine.Spec.Class.Name
+		if lastDash != -1 {
+			name = machine.Spec.Class.Name[:lastDash]
+		}
+		if strings.HasPrefix(class.Name, name) && (newMachineClass == nil || newMachineClass.CreationTimestamp.After(class.CreationTimestamp.Time)) {
 			newMachineClass = class
 		}
 	}
