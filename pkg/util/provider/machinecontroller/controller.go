@@ -12,6 +12,11 @@ import (
 	"sync"
 	"time"
 
+	machineinternal "github.com/gardener/machine-controller-manager/pkg/apis/machine"
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
+	machineapi "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/typed/machine/v1alpha1"
+	machineinformers "github.com/gardener/machine-controller-manager/pkg/client/informers/externalversions/machine/v1alpha1"
+	machinelisters "github.com/gardener/machine-controller-manager/pkg/client/listers/machine/v1alpha1"
 	"github.com/gardener/machine-controller-manager/pkg/handlers"
 	"github.com/gardener/machine-controller-manager/pkg/util/k8sutils"
 	"github.com/gardener/machine-controller-manager/pkg/util/permits"
@@ -20,12 +25,6 @@ import (
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/options"
 	"github.com/gardener/machine-controller-manager/pkg/util/worker"
 	"k8s.io/apimachinery/pkg/labels"
-
-	machineinternal "github.com/gardener/machine-controller-manager/pkg/apis/machine"
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	machineapi "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/typed/machine/v1alpha1"
-	machineinformers "github.com/gardener/machine-controller-manager/pkg/client/informers/externalversions/machine/v1alpha1"
-	machinelisters "github.com/gardener/machine-controller-manager/pkg/client/listers/machine/v1alpha1"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/prometheus/client_golang/prometheus"
@@ -382,7 +381,7 @@ func (dc *controller) getNewMachineClassForMachine(machine *machinev1alpha1.Mach
 		if lastDash != -1 {
 			name = machine.Spec.Class.Name[:lastDash]
 		}
-		if strings.HasPrefix(class.Name, name) && (newMachineClass == nil || newMachineClass.CreationTimestamp.After(class.CreationTimestamp.Time)) {
+		if strings.HasPrefix(class.Name, name) && (newMachineClass == nil || class.CreationTimestamp.After(newMachineClass.CreationTimestamp.Time)) {
 			newMachineClass = class
 		}
 	}
