@@ -3577,7 +3577,7 @@ var _ = Describe("machine_util", func() {
 
 				waitForCacheSync(stop, c)
 
-				retryPeriod, err := c.inPlaceUpdate(context.TODO(), nil, data.setup.machine, nil, nil)
+				retryPeriod, err := c.inPlaceUpdate(context.TODO(), nil, data.setup.machine, nil)
 
 				Expect(retryPeriod).To(Equal(data.expect.retryPeriod))
 				if data.expect.err == nil {

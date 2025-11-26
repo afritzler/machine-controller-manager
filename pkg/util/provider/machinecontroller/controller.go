@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/driver"
 	"github.com/gardener/machine-controller-manager/pkg/util/provider/options"
 	"github.com/gardener/machine-controller-manager/pkg/util/worker"
+	"k8s.io/apimachinery/pkg/labels"
 
 	machineinternal "github.com/gardener/machine-controller-manager/pkg/apis/machine"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
@@ -360,4 +361,25 @@ func (dc *controller) Run(workers int, stopCh <-chan struct{}) {
 	handlers.UpdateHealth(false)
 
 	waitGroup.Wait()
+}
+
+// TODO: super hacky solution. Don't try this at home!
+func (dc *controller) getNewMachineClassForMachine(machine *machinev1alpha1.Machine) (*machinev1alpha1.MachineClass, error) {
+	if machine == nil {
+		return nil, nil
+	}
+
+	machineClasses, err := dc.machineClassLister.MachineClasses(machine.Namespace).List(labels.Everything())
+	if err != nil {
+		return nil, fmt.Errorf("failed to list machine classes: %v", err)
+	}
+
+	var newMachineClass *machinev1alpha1.MachineClass
+	for _, class := range machineClasses {
+		if newMachineClass == nil || newMachineClass.CreationTimestamp.After(class.CreationTimestamp.Time) {
+			newMachineClass = class
+		}
+	}
+
+	return newMachineClass, nil
 }

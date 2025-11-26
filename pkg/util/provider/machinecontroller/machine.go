@@ -231,7 +231,7 @@ func (c *controller) reconcileClusterMachine(ctx context.Context, machine *v1alp
 			return retry, err
 		}
 
-		retry, err = c.inPlaceUpdate(ctx, c.driver, machine, machineClass, secretData)
+		retry, err = c.inPlaceUpdate(ctx, c.driver, machine, secretData)
 		if err != nil {
 			return retry, err
 		}
